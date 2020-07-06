@@ -1,0 +1,5 @@
+env/
+hosts
+conf
+config
+ansible.cfg
