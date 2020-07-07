@@ -1,0 +1,4 @@
+---
+db_user: "super"
+db_password: "secret"
+db_name: "kecloak"

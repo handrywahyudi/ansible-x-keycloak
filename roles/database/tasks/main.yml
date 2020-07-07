@@ -1,0 +1,11 @@
+---
+- name: Install depedencies library 
+  apt: 
+    pkg:    
+    - bash
+    - openssl
+    - libssl-dev
+    - libssl-doc
+    state: latest
+    update_cache: yes
+  tags: packages
