@@ -9,3 +9,49 @@
     state: latest
     update_cache: yes
   tags: packages
+
+- name: Install PostgreSQL
+  apt:
+    pkg:
+    - postgresql
+    - postgresql-contrib
+    - libpq-dev
+    - python3-psycopg2 
+  tags: packages
+
+- name: Copy Template postgresql.conf
+  template:
+    src: postgresql.conf.j2
+    dest: /etc/postgresql/10/main/postgresql.conf
+    owner: postgres
+    group: postgres
+    mode: u=rw,g=r,o=r
+
+- name: Copy Template pg_hba.conf
+  template:
+    src: pg_hba.conf.j2
+    dest: /etc/postgresql/10/main/pg_hba.conf
+    owner: postgres
+    group: postgres
+    mode: u=rw,g=r,o=r
+
+- name: Ensure the PostgreSQL service is running
+  service: name=postgresql state=started enabled=yes
+
+- name: Create Superuser Database 
+  postgresql_user:
+    name: "{{ db_user_superuser }}"
+    password: "{{ db_password_superuser }}"
+    role_attr_flags: SUPERUSER
+  tags: create_user
+
+- name: Create Database
+  postgresql_db:
+    name: "{{ db_name }}"
+    login_user: "{{ db_user }}"
+    login_password: "{{ db_password }}"
+    encoding: UTF-8
+    conn_limit: "1000"
+    owner: "{{ db_user }}"
+    state: present
+  tags: create_database
