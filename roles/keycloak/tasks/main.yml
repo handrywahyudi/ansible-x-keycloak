@@ -25,16 +25,24 @@
     name: keycloak
     comment: keycloak
 
-- name: Create Group Keycloak And Put Keycloak User To That Group 
-  command: "{{ item }}"
-  with_items: 
-    - groupadd keycloak
-    - useradd -r -g keycloak -d /opt/keycloak -s /sbin/nologin keycloak
+#- name: Create Group Keycloak And Put Keycloak User To That Group 
+#  command: "{{ item }}"
+#  with_items: 
+#    - groupadd keycloak
+#    - useradd -r -g keycloak -d /opt/keycloak -s /sbin/nologin keycloak
  
-- name: Change Permission And Ownership of the Keycloak Installation Directory
-  command: "{{ item }}" 
-  with_items:
-    - chown -R /opt/keycloak
-    - chmod o+x /opt/keycloak/bin
+- name: Change Ownership of the Keycloak Installation Directory
+  file:
+    path: /opt/keycloak
+    state: directory
+    recurse: yes
+    owner: keycloak
+    group: keycloak
 
-
+- name: Change Permission of the Keycloak Installation Directory
+  file:
+    path: /opt/keycloak/bin
+    state: directory
+    recurse: yes
+    mode: '0755'
+    
