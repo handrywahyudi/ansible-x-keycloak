@@ -1,7 +1,9 @@
 ---
 - name: Install Keycloak
-  hosts: all
-  become: true
+  hosts: keycloak 
+  become: yes
 
-  tasks:
+  roles:
+    - keycloak
+
     

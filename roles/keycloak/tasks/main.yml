@@ -1,0 +1,40 @@
+---
+- name: Install OpenJDK 8 
+  apt: 
+    name: openjdk-8-jdk 
+    update_cache: yes
+  tags: install-openjdk 
+
+- name: Download Keycloak From Official Site
+  get_url:
+    url: https://downloads.jboss.org/keycloak/10.0.2/keycloak-10.0.2.zip
+    dest: /tmp/keycloak.zip
+    mode: '0644'
+
+- name: Extract File Keycloak
+  unarchive:
+    src: /tmp/keycloak.zip
+    dest: /tmp/
+    remote_src: yes
+
+- name: Move Keycloak To OPT Directory
+  command: mv /tmp/keycloak-10.0.2 /opt/keycloak
+
+- name: Add User Keycloak
+  user:
+    name: keycloak
+    comment: keycloak
+
+- name: Create Group Keycloak And Put Keycloak User To That Group 
+  command: "{{ item }}"
+  with_items: 
+    - groupadd keycloak
+    - useradd -r -g keycloak -d /opt/keycloak -s /sbin/nologin keycloak
+ 
+- name: Change Permission And Ownership of the Keycloak Installation Directory
+  command: "{{ item }}" 
+  with_items:
+    - chown -R /opt/keycloak
+    - chmod o+x /opt/keycloak/bin
+
+
