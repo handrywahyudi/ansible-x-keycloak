@@ -11,6 +11,12 @@
     dest: /tmp/keycloak.zip
     mode: '0644'
 
+- name: Download Postgresql Driver
+  get_url: 
+    url: https://jdbc.postgresql.org/download/postgresql-42.2.14.jar
+    dest: /tmp/postgresql-42.2.14.jar
+    mode: '0644'
+
 - name: Extract File Keycloak
   unarchive:
     src: /tmp/keycloak.zip
@@ -20,10 +26,10 @@
 - name: Move Keycloak To OPT Directory
   command: mv /tmp/keycloak-10.0.2 /opt/keycloak
 
-- name: Add User Keycloak
-  user:
-    name: keycloak
-    comment: keycloak
+#- name: Add User Keycloak
+#  user:
+#    name: keycloak
+#    comment: keycloak
 
 #- name: Create Group Keycloak And Put Keycloak User To That Group 
 #  command: "{{ item }}"
@@ -45,6 +51,33 @@
     state: directory
     recurse: yes
     mode: '0755'
+
+- name: Setup Directory For Database
+  file:
+    path: /opt/keycloak/modules/system/layers/keycloak/org/postgresql/main
+    state: directory
+    recurse: yes
+    owner: keycloak
+    group: keycloak
+
+- name: Move Postgresql Driver To Directory Modules
+  command: cp /tmp/postgresql-42.2.14.jar /opt/keycloak/modules/system/layers/keycloak/org/postgresql/main
+
+- name: Copy Module Postgresql From Template To Module Directory
+  template:
+    src: module-postgres.xml.j2
+    dest: /opt/keycloak/modules/system/layers/keycloak/org/postgresql/main/module.xml
+    owner: keycloak
+    group: keycloak
+    mode: '0644'
+
+- name: Copy standalone.xml From Templates To Installation Configuration Directory
+  template:
+    src: standalone.xml.j2
+    dest: /opt/keycloak/standalone/configuration/standalone.xml 
+    owner: keycloak
+    group: keycloak
+    mode: '0644'
 
 - name: Copy wildfly.conf From Keycloak Docs To etc Directory
   template: 
@@ -72,7 +105,7 @@
   tags:
     - config
 
-
-
-
-    
+- name: Setup User And Admin Password
+  command: /opt/keycloak/bin/add-user-keycloak.sh -r master -u '{{ user_admin }}' -p '{{ password_admin }}' 
+  tags:
+    - create-user
