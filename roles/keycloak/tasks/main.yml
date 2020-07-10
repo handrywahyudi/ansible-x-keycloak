@@ -10,32 +10,44 @@
     url: https://downloads.jboss.org/keycloak/10.0.2/keycloak-10.0.2.zip
     dest: /tmp/keycloak.zip
     mode: '0644'
+  tags:
+    - download
 
 - name: Download Postgresql Driver
   get_url: 
     url: https://jdbc.postgresql.org/download/postgresql-42.2.14.jar
     dest: /tmp/postgresql-42.2.14.jar
     mode: '0644'
+  tags:
+    - download
 
 - name: Extract File Keycloak
   unarchive:
     src: /tmp/keycloak.zip
     dest: /tmp/
     remote_src: yes
+  tags:
+    - setup-keycloak
 
 - name: Move Keycloak To OPT Directory
   command: mv /tmp/keycloak-10.0.2 /opt/keycloak
+  tags:
+    - setup-keycloak
 
-#- name: Add User Keycloak
-#  user:
-#    name: keycloak
-#    comment: keycloak
+- name: Add User Keycloak
+  user:
+    name: keycloak
+    comment: keycloak
+  tags:
+    - setup-keycloak
 
-#- name: Create Group Keycloak And Put Keycloak User To That Group 
-#  command: "{{ item }}"
-#  with_items: 
-#    - groupadd keycloak
-#    - useradd -r -g keycloak -d /opt/keycloak -s /sbin/nologin keycloak
+- name: Create Group Keycloak And Put Keycloak User To That Group 
+  command: "{{ item }}"
+  with_items: 
+    - groupadd keycloak
+    - useradd -r -g keycloak -d /opt/keycloak -s /sbin/nologin keycloak
+  tags:
+    - setup-keycloak
  
 - name: Change Ownership of the Keycloak Installation Directory
   file:
@@ -44,6 +56,8 @@
     recurse: yes
     owner: keycloak
     group: keycloak
+  tags:
+    - setup-keycloak
 
 - name: Change Permission of the Keycloak Installation Directory
   file:
@@ -51,6 +65,8 @@
     state: directory
     recurse: yes
     mode: '0755'
+  tags:
+    - setup-keycloak
 
 - name: Setup Directory For Database
   file:
@@ -59,9 +75,13 @@
     recurse: yes
     owner: keycloak
     group: keycloak
+  tags:
+    - setup-database
 
 - name: Move Postgresql Driver To Directory Modules
   command: cp /tmp/postgresql-42.2.14.jar /opt/keycloak/modules/system/layers/keycloak/org/postgresql/main
+  tags:
+    - setup-database
 
 - name: Copy Module Postgresql From Template To Module Directory
   template:
@@ -70,6 +90,9 @@
     owner: keycloak
     group: keycloak
     mode: '0644'
+  tags: 
+    - copy-configuration
+    - setup-database
 
 - name: Copy standalone.xml From Templates To Installation Configuration Directory
   template:
@@ -78,14 +101,16 @@
     owner: keycloak
     group: keycloak
     mode: '0644'
+  tags: 
+    - copy-configuration
 
 - name: Copy wildfly.conf From Keycloak Docs To etc Directory
   template: 
     src: wildfly.conf.j2
     dest: /etc/keycloak/keycloak.conf
     mode: '0644'
-  tags:
-    - config
+  tags: 
+    - copy-configuration
 
 - name: Copy File launch.sh To Instalation Directory
   template:
@@ -95,7 +120,7 @@
     group: keycloak
     mode: '755' 
   tags:
-    - config
+    - copy-configuration
 
 - name: Copy wildfly.service To systemd Directory
   template: 
@@ -103,9 +128,19 @@
     dest: /etc/systemd/system/keycloak.service 
     mode: '0644'
   tags:
-    - config
+    - copy-configuration 
 
 - name: Setup User And Admin Password
   command: /opt/keycloak/bin/add-user-keycloak.sh -r master -u '{{ user_admin }}' -p '{{ password_admin }}' 
   tags:
-    - create-user
+    - create-admin-user
+
+- name: Reload Systemctl Configuration
+  command: systemctl daemon-reload
+  tags:
+    - reload-daemon-systemctl
+
+- name: Restart Keycloak Service 
+  service: name=keycloak state=restarted enabled=yes
+  tags:
+    - restart-service
