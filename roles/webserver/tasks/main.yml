@@ -1,9 +1,19 @@
 ---
-- hosts: web
-  - name: Install nginx from latest version
-    apt: name=nginx state=latest
-  - name: start nginx
-    service: 
-      name: nginx
-      state: started
+- name: Install nginx from latest version
+  apt: 
+    name: nginx 
+    update-cache: yes
+
+- name: Copy Configuration From Templates To Nginx Site Directory
+  template:
+    src: site.j2 
+    dest: /etc/nginx/sites-available/site.conf
+
+- name: Link Nginx Configuration
+  command: ln -s /etc/nginx/sites-available/site.conf /etc/nginx/sites-enabled 
+
+- name: start nginx
+  service: 
+    name: nginx
+    state: started
       

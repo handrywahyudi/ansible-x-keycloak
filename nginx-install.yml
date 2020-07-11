@@ -1,4 +1,7 @@
 ---
-- hosts: web
+- name: Install NGINX
+  hosts: webserver 
+  become: yes
+  
   roles:
-    - nginx
+    - webserver
